@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>infectiousR: Access Infectious and Epidemiological Data via disease.sh API</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">infectiousR: Access Infectious and
+Epidemiological Data via disease.sh API</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(infectiousR)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; Adjuntando el paquete: &#39;dplyr&#39;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from &#39;package:stats&#39;:</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt;     filter, lag</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; The following objects are masked from &#39;package:base&#39;:</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code></pre></div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The <code>infectiousR</code> package provides a seamless interface to
+<strong>access real-time data on infectious diseases through the
+disease.sh API, a RESTful API offering global health
+statistics</strong>. The package enables users to explore up-to-date
+information on disease outbreaks, vaccination progress, and surveillance
+metrics across countries, continents, and U.S. states.</p>
+<p>It includes a set of API-related functions to retrieve
+<strong>real-time statistics on COVID-19, influenza-like illnesses from
+the Centers for Disease Control and Prevention (CDC), and vaccination
+coverage worldwide</strong>.</p>
+<p>Additionally, <code>infectiousR</code> offers a built-in function to
+view the datasets available within the package. The package also
+includes <strong>curated datasets on infectious diseases such as
+influenza, measles, dengue, Ebola, tuberculosis, meningitis, AIDS, and
+others</strong> — making it a comprehensive resource for real-time
+monitoring and historical analysis of global infectious disease
+data.</p>
+<div id="functions-for-infectiousr" class="section level2">
+<h2>Functions for infectiousR</h2>
+<p>The <code>infectiousR</code> package provides several core functions
+to retrieve real-time infectious disease data from the disease.sh API.
+Below is a list of the main API-access functions included in the
+package:</p>
+<ul>
+<li><p><code>get_global_covid_stats()</code> – Retrieves global COVID-19
+statistics, including total cases, deaths, recoveries, and
+more.</p></li>
+<li><p><code>get_covid_stats_by_country_name()</code> – Fetches COVID-19
+statistics for a specific country by name (e.g., “Brazil”,
+“India”).</p></li>
+<li><p><code>get_covid_stats_by_country()</code> – Retrieves COVID-19
+data for all countries.</p></li>
+<li><p><code>get_covid_stats_by_continent()</code> – Retrieves COVID-19
+data grouped by continent.</p></li>
+<li><p><code>get_us_states_covid_stats()</code> – Returns COVID-19
+statistics for all U.S. states.</p></li>
+<li><p><code>get_covid_stats_for_state()</code> – Retrieves data for
+specified U.S. states (e.g., “NEW YORK”, “california”).</p></li>
+<li><p><code>get_influenza_cdc_ili()</code> – Accesses influenza-like
+illness (ILI) data from the CDC.</p></li>
+<li><p><code>view_datasets_infectiousR()</code> – Lists all curated
+datasets available in the infectiousR package.</p></li>
+</ul>
+<p>These functions enable users to access up-to-date, structured
+information on infectious diseases, which can be combined with tools
+such as <code>dplyr</code> and <code>ggplot2</code> for powerful
+epidemiological analysis and visualization. In the next section, we’ll
+explore a use case to demonstrate how to visualize COVID-19 data with
+<code>infectiousR</code>.</p>
+<div id="us-covid-19-statistics-top-5-states-by-total-cases" class="section level3">
+<h3>US COVID-19 Statistics: Top 5 States by Total Cases</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co"># Load the COVID-19 data (from your package)</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>covid_data <span class="ot">&lt;-</span> <span class="fu">get_us_states_covid_stats</span>()</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co"># Select the first 5 rows and remove columns with only NA values</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>covid_clean <span class="ot">&lt;-</span> covid_data <span class="sc">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="sc">~</span> <span class="sc">!</span><span class="fu">all</span>(<span class="fu">is.na</span>(.))))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co"># Plot: Bar plot with different colors and readable y-axis (no scientific notation)</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="fu">ggplot</span>(covid_clean, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(state, <span class="sc">-</span>cases), <span class="at">y =</span> cases, <span class="at">fill =</span> state)) <span class="sc">+</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat =</span> <span class="st">&quot;identity&quot;</span>) <span class="sc">+</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="cf">function</span>(x) <span class="fu">format</span>(x, <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>)) <span class="sc">+</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">&quot;COVID-19: Total Reported Cases by State (Top 5)&quot;</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">&quot;State&quot;</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">&quot;Total Cases&quot;</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="covid-19-case-rates-in-latin-america" class="section level3">
+<h3>COVID-19 Case Rates in Latin America</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">get_covid_stats_by_country</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">filter</span>(country <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Argentina&quot;</span>, <span class="st">&quot;Bolivia&quot;</span>, <span class="st">&quot;Brazil&quot;</span>, <span class="st">&quot;Chile&quot;</span>, <span class="st">&quot;Colombia&quot;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>                       <span class="st">&quot;Costa Rica&quot;</span>, <span class="st">&quot;Cuba&quot;</span>, <span class="st">&quot;Dominican Republic&quot;</span>, <span class="st">&quot;Ecuador&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                       <span class="st">&quot;El Salvador&quot;</span>, <span class="st">&quot;Guatemala&quot;</span>, <span class="st">&quot;Honduras&quot;</span>, <span class="st">&quot;Mexico&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>updated, <span class="sc">-</span><span class="fu">starts_with</span>(<span class="st">&quot;today&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">case_rate =</span> (cases<span class="sc">/</span>population)<span class="sc">*</span><span class="dv">100000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(country, <span class="sc">-</span>case_rate), </span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>         <span class="at">y =</span> case_rate, </span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>         <span class="at">fill =</span> country)) <span class="sc">+</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">rainbow</span>(<span class="at">n =</span> <span class="dv">13</span>)) <span class="sc">+</span>  <span class="co"># Built-in rainbow palette</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;COVID-19 Case Rates in Latin America&quot;</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">&quot;Cases per 100,000 population&quot;</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>       <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Cases per 100k&quot;</span>) <span class="sc">+</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>        <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>),</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>        <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="dataset-suffixes" class="section level3">
+<h3>Dataset Suffixes</h3>
+<p>Each dataset in <code>infectiousR</code> is labeled with a
+<code>suffix</code> to indicate its type and structure:</p>
+<ul>
+<li><p><code>_df</code>: A standard data frame.</p></li>
+<li><p><code>_tbl_df</code>: A tibble, a modern version of a data frame
+with better formatting and functionality.</p></li>
+<li><p><code>_ts</code>: A time series.</p></li>
+</ul>
+</div>
+</div>
+<div id="datasets-included-in-infectiousr" class="section level2">
+<h2>Datasets Included in infectiousR</h2>
+<p>In addition to API functions, <code>infectiousR</code> includes
+several preloaded datasets that provide valuable insights into various
+aspects of infectious diseases such as influenza, measles, dengue,
+Ebola, tuberculosis, meningitis,AIDS, and others:</p>
+<ul>
+<li><p><code>spanish_flu_df</code>: Contains daily mortality records
+from the 1918 influenza pandemic.</p></li>
+<li><p><code>fungal_infections_df</code>: Provides clinical treatment
+outcomes for systemic fungal infections.</p></li>
+<li><p><code>aids_azt_df</code>: Documents AIDS symptom progression and
+zidovudine (AZT) treatment responses.</p></li>
+<li><p><code>meningitis_df</code>: Records meningococcal disease cases
+with treatment response metadata (includes missing data
+indicators).</p></li>
+</ul>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>The <code>infectiousR</code> package provides a robust toolkit for
+accessing and analyzing global infectious disease data through the
+<strong>disease.sh API</strong> and curated epidemiological datasets.
+From real-time COVID-19 statistics to historical records of bacterial,
+viral, and fungal infections (including tuberculosis, AIDS, meningitis,
+and the 1918 influenza pandemic), <code>infectiousR</code> empowers
+researchers to conduct comprehensive disease surveillance and trend
+analysis.</p>
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;">
+
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
